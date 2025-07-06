@@ -1,0 +1,13 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %}{% block content %}
+<div
+  class="max-w-lg mx-auto flex flex-col justify-center  mt-10 bg-blue-200 shadow-md p-6 rounded-lg"
+>
+  <h2 class="text-xl font-bold mb-4">Update Proposal Status</h2>
+  <form method="post">
+    {% csrf_token %} {{ form | crispy  }}
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">
+      Update
+    </button>
+  </form>
+</div>
+{% endblock %}

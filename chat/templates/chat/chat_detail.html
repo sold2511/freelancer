@@ -1,0 +1,74 @@
+{% extends 'accounts/_base.html' %} {% block content %}
+<div class="p-5 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+  <h2 class="text-3xl font-bold text-center">
+    💬 Chat Room - {{ conversation.job.title }}
+  </h2>
+
+  <!-- Chat messages -->
+  <div
+    id="chat-box"
+    class="bg-gray-100 h-[400px] overflow-y-scroll p-4 rounded"
+  >
+    {% for message in messages %}
+    <p><strong>{{ message.sender.username }}</strong>: {{ message.content }}</p>
+    {% empty %}
+    <p>No messages yet.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Message form -->
+  <form id="chat-form" class="flex gap-2 mt-2">
+    <input
+      id="message-input"
+      type="text"
+      placeholder="Type your message..."
+      class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+    />
+    <button
+      type="submit"
+      class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
+    >
+      Send
+    </button>
+  </form>
+</div>
+
+<script>
+  const roomName = "{{ conversation.pk }}";
+  const username = "{{ user.username }}";
+  const chatSocket = new WebSocket(
+    "ws://" + window.location.host + "/ws/chat/" + roomName + "/"
+  );
+  const conversationId = "{{ conversation.id }}";
+  const socket = new WebSocket(
+      `ws://${window.location.host}/ws/chat/${conversationId}/`
+  );
+  chatSocket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+    const chatBox = document.getElementById("chat-box");
+    const messageElement = document.createElement("p");
+    messageElement.innerHTML = `<strong>${data.username}</strong>: ${data.message}`;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
+  };
+
+  chatSocket.onclose = function (e) {
+    console.error("Chat socket closed unexpectedly");
+  };
+
+  document.getElementById("chat-form").onsubmit = function (e) {
+    e.preventDefault();
+    const inputField = document.getElementById("message-input");
+    const message = inputField.value.trim();
+
+    if (message) {
+      chatSocket.send(
+        JSON.stringify({
+          message: message,
+        })
+      );
+      inputField.value = "";
+    }
+  };
+</script>
+{% endblock %}

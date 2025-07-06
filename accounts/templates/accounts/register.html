@@ -1,0 +1,108 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %}
+<div class="flex justify-center items-center shadow-2xl shadow-blue-500 bg-blue-200 w-[100%]">
+    <div class="w-[70vw] p-5">
+        {% if msg %}
+        <p style="color: green">{{ msg }}</p>
+        {% endif %} {% if errors %}
+        <ul class="margin-auto" style="color: red; margin: 0px 40px">
+            {% for field, error_list in errors.items %}
+            <li class="margin-auto">{{ field }}: {{ error_list|join:", " }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if form.instance.pk %}
+        <h2 class="text-4xl text-center font-bold">Update Profile</h2>
+        {% else %}
+        <h2 class="text-4xl text-center font-bold">Register</h2>
+        {% endif %}
+        <form method="post" action=" 
+        {% if form.instance.pk %}
+        
+        {% else %}
+        url 'register'
+        
+        {% endif %}
+             " enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="username">username</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="text" name="username"
+                    value="{{ form.username.value|default_if_none:'' }}" placeholder="Username" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="email">email</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="email" name="email" placeholder="Email"
+                    value="{{ form.email.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="first_name">first_name</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="text" name="first_name"
+                    placeholder="First Name" value="{{ form.first_name.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="last_name">last_name</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="text" name="last_name"
+                    placeholder="Last Name" value="{{ form.last_name.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="phone">Phone</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="text" name="phone" placeholder="Phone"
+                    value="{{ form.phone.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="role">Role</label>
+                <select name="role" class="border-b-1 outline-0 px-8 py-2 w-[100%]">
+                    <option value="client" {% if form.role.value == 'client' %}selected{% endif %}>Client</option>
+                    <option value="freelancer" {% if form.role.value == 'freelancer' or not form.role.value %}selected{% endif %}>Freelancer</option>
+
+                </select>
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="role">Tag Line</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="text" name="tagline" placeholder="Tagline"
+                    value="{{ form.tagline.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="role">Bio</label>
+                <textarea class="border-b-1 outline-0 px-8 py-2 w-[100%]" name="bio" id="" cols="30"
+                    rows="4">{{ form.bio.value|default_if_none:'' }}</textarea>
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="role">Profile Picture</label>
+                <input type="file" class="border-b-1 outline-0 px-8 py-2 w-[100%]" name="profile_pic"
+                    value="{{ form.profile_pic.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label class="text-md" for="role">Website</label>
+                <input type="text" name="website" class="border-b-1 outline-0 px-8 py-2 w-[100%]"
+                    value="{{ form.website.value|default_if_none:'' }}" />
+            </div>
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label for="password">Password</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="password" name="password"
+                    placeholder="Password" value="{{ form.password.value|default_if_none:'' }}" />
+            </div>
+
+            <div class="my-4 shadow-xl shadow-gray-200">
+                <label for="password2">Confirm Password</label>
+                <input class="border-b-1 outline-0 px-8 py-2 w-[100%]" type="password" name="password2"
+                    placeholder="Confirm Password" value="{{ form.password.value|default_if_none:'' }}" />
+            </div>
+            <button
+                class="bg-blue-400 px-6 py-2 my-1 text-white rounded-full hover:scale-[1.2] hover:bg-blue-800 text-center"
+                type="submit">
+                {% if form.instance.pk %}Update{% else %}Register{% endif %}
+            </button>
+        </form>
+
+            
+            {% if not form.instance.pk %}
+            <p class="text-gray-600">
+                Already have a account?
+                <a class="text-blue-400 hover:text-blue-600" href="{% url 'login' %}">Sign In</a>
+            </p>
+            {% endif %}
+                
+    </div>
+</div>
+{% endblock %}

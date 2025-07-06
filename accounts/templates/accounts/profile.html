@@ -1,0 +1,46 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %} 
+
+<div class="w-[100%] justify-center h-[80vh] flex items-center ">
+        <div class="w-[60%] py-5 h-[80%] border bg-blue-400  text-white ">
+          
+          {% if users.profile_pic  %}
+            
+          
+          <div class="w-[150px] h-[150px] border overflow-hidden  rounded-full shadow-xl shadow-gray-200  absolute top-23 right-[45%]"> 
+            <img class=" object-cover" src="{{users.profile_pic.url}}" alt="">
+          </div>
+          {% else %}
+          <div class="w-[150px] h-[150px] border overflow-hidden  items-center flex justify-center  rounded-full shadow-xl shadow-gray-200  absolute top-23 right-[45%]"> 
+            <i class="fa-solid text-[68px]   text-blue-800/40 fa-user-tie"></i>
+            
+            
+          </div>
+
+          {% endif %}
+          <div class="w-[] h-[13%]"></div>
+          <div class="flex m-4 justify-evenly ">
+            <div class="w-[40%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Name: </label>{{users.full_name}}</div>
+            <div class="w-[40%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Username :</label> {{users.username}}</div>
+          </div>
+          <div class="flex m-4 justify-evenly ">
+            <div class="w-[40%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Phone: </label>{{users.phone}}</div>
+            <div class="w-[40%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Email :</label> {{users.email}}</div>
+          </div>
+          <div class="flex m-4 justify-evenly ">
+            <div class="w-[40%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Role :</label> {{users.role}}</div>
+            <div class="w-[40%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Tagline :</label> {{users.tagline}}</div>
+          </div>
+          <div class="flex m-4 justify-evenly ">
+            <div class="w-[85%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Website: </label>{{users.website}}</div>
+            
+          </div>
+          <div class="flex m-4 justify-evenly ">
+            <div class="w-[85%] px-5 py-2 border"><label class="text-[19px] text-gray-300">Bio: </label>{{users.bio}}</div> 
+          </div>
+         <a   class="my-2 border px-5 py-2 rounded-full ms-20 " href="{% url 'profile-update' pk=users.id %}">Update</a>
+
+        </div>
+</div>
+
+
+{% endblock content %}

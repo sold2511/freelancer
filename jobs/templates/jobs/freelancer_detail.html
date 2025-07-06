@@ -1,0 +1,27 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %} {% if freelancer.profile_pic %}
+<img
+  class="w-full h-[20vh] border mr-4"
+  src="{{freelancer.profile_pic.url}}"
+  alt="profile_pic"
+/>
+{% endif %}
+
+<h1 class="text-3xl font-semibold">{{object.name}}</h1>
+<p class="text-lg text-gray-800 my-2">{{object.tagline}}</p>
+
+{% if object.website %}
+<p class="">
+  <a
+    class="text-blue-600 underline"
+    href="{{object.website}}"
+    alt="dev website"
+    target="_blank"
+    >Website</a
+  >
+</p>
+{% else %}
+<p class="text-gray-600">No website</p>
+{% endif %}
+
+<hr class="my-4" />
+{{object.bio}} {% endblock content %}

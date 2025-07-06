@@ -1,0 +1,109 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %}
+<div class="p-5 relative">
+
+  <div class="bg-blue-400 w-[60vw] text-white p-5 my-5 mx-auto min-h-[70vh] ">
+    <h2 class="text-4xl  font-bold text-center my-2">{{object.title}}</h2>
+    <p class="mt-4 px-8 py-4  text-lg">{{ object.description }}</p>
+    <div class="p-5 flex flex-col gap-5">
+      <p class=" px-8 py-4 border">Budget: ₹{{ object.budget }}</p>
+      <p class=" px-8 py-4 border">Deadline: {{ object.deadline }}</p>
+      <div class="flex gap-5  w-[100%] border">
+
+        <p class=" px-8 py-4  w-[40%]">Skills required :
+        <ul class="flex gap-5 items-center">
+          {% for skill in object.skills.all %}
+          <li class="">{{ skill.name }}</li>
+          {% endfor %}
+        </ul>
+        </p>
+      </div>
+      {% if user.role == 'client' %}
+    <div class="p-5 flex gap-5">
+      <a class="bg-white px-6 py-2 my-1 text-black rounded-full hover:scale-[1.2] hover:bg-gray-400 text-center"
+      href="{% url 'job-update' object.pk %}">Edit</a>
+      <a class="bg-white px-6 py-2 my-1 text-black rounded-full hover:scale-[1.2] hover:bg-gray-400 text-center"
+      href="{% url 'job-delete' object.pk %}">Delete</a>
+    </div>
+    
+      <h3>Proposals Received:</h3>
+      <table class="border-spacing-2 border-separate text-center ">
+        <thead class="font-bold text-[19px]">
+          <td class="shadow-lg shadow-gray-200 px-5 py-2">Freelancer Name</td>
+          <td class="shadow-lg shadow-gray-200 px-5 py-2">Budget</td>
+          <td class="shadow-lg shadow-gray-200 px-5 py-2">Status</td>
+          <td class="shadow-lg shadow-gray-200 px-5 py-2">Action</td>
+        </thead>
+        <tbody>
+          
+          {% for proposal in proposals %}
+          <tr>
+            <td class="shadow-lg shadow-gray-200 px-5 py-2">{{ proposal.freelancer.full_name }}</td>
+            <td class="shadow-lg shadow-gray-200  py-2">₹{{ proposal.estimated_budget }}</td>
+            <td class="shadow-lg shadow-gray-200  py-2
+                {% if proposal.status == 'rejected' %}
+                text-red-400
+                {% elif proposal.status == 'accepted'%}
+                text-green-300
+                {% else %}
+                text-gray-300
+                {% endif %}
+                ">{{ proposal.status }}</td>
+            <td class="shadow-lg shadow-gray-200  py-2">
+              <a href="{% url 'proposal-edit-status' pk=proposal.id %}"
+                class="relative inline-block group text-blue-600">
+                Edit
+                <span
+                  class="absolute left-0 -bottom-1 h-0.5 w-0 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="shadow-lg shadow-gray-200  py-2">No Proposals Submitted Yet.</td>
+          </tr>
+          {% endfor %}
+          
+        </tbody>
+      </table>
+      
+
+
+    </div>
+
+
+    {% elif user.role == 'freelancer' %}
+    {% if my_proposal %}
+    <h4>Your Proposal</h4>
+    <p>Status: <span class="
+      {% if my_proposal.status == 'rejected' %}
+        text-red-400
+        {% elif my_proposal.status == 'accepted'%}
+        text-green-300
+      {% else %}
+      text-gray-300
+      {% endif %}
+        ">{{ my_proposal.status }}</span></p>
+    <p>{{ my_proposal.message }}</p>
+    {% comment %} <p>DEBUG: my_proposal is {{ my_proposal }}</p>
+    <p>DEBUG: Conversation is {{ my_proposal.get_conversation }}</p>
+    <p>DEBUG: Conversation PK is {{ my_proposal.get_conversation.pk }}</p> {% endcomment %}
+    {% if my_proposal.status == 'accepted' %}
+   
+    <a href="{% url 'chat-detail' my_proposal.get_conversation.pk %}">💬 Start Chat</a>
+ 
+{% endif %} 
+    {% else %}
+   
+    <div class="">
+      <a class="bg-white px-4  py-2 my-1 text-black rounded-full hover:scale-[1.2] hover:bg-gray-400 text-center" href="{% url 'proposal-create' job.id %}">Submit Proposal</a>
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    
+    
+  </div>
+
+</div>
+
+{% endblock %}

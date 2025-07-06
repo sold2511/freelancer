@@ -1,0 +1,85 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %}
+
+<div
+  class="max-w-2xl mx-auto mt-10 p-6 bg-blue-400 text-white shadow-lg rounded-2xl border border-gray-200"
+>
+  <h2 class="text-3xl font-bold text-center  mb-6">
+    Submit Proposal
+  </h2>
+
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <div>
+      <label for="message" class="block text-lg font-medium"
+        >Proposal Message</label
+      >
+      <textarea
+        name="message"
+        id="message"
+        rows="5"
+        class="mt-2 py-2 px-5 block w-full rounded-md border-b-gray-300 outline-0 shadow-sm focus:border-b-blue-500 focus:ring-blue-500"
+        placeholder="Describe your approach, experience, or ask questions..."
+      >
+{{ form.message.value }}</textarea
+      >
+      {% if form.message.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.message.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div>
+      <label
+        for="estimated_budget"
+        class="block text-lg font-medium "
+        >Estimated Budget (₹)</label
+      >
+      <input
+        type="number"
+        name="estimated_budget"
+        id="estimated_budget"
+        class="mt-2 block px-5 py-2 outline-0 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        placeholder="Enter your price"
+        value="{{ form.estimated_budget.value }}"
+      />
+      {% if form.estimated_budget.errors %}
+      <p class="text-red-500 text-sm mt-1">
+        {{ form.estimated_budget.errors.0 }}
+      </p>
+      {% endif %}
+    </div>
+
+    <div>
+      <label for="timeline" class="block text-lg font-medium "
+        >Timeline</label
+      >
+      <input
+        type="text"
+        name="timeline"
+        id="timeline"
+        class="mt-2 px-5 py-3 outline-0 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        placeholder="e.g. 5 days, 1 week, 10 hours"
+        value="{{ form.timeline.value }}"
+      />
+      {% if form.timeline.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.timeline.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <div class="flex justify-between items-center">
+      <a
+        href="{% url 'job-detail' pk=job.id %}"
+        class="text-blue-600 hover:underline"
+        >← Back to Job</a
+      >
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-all duration-300"
+      >
+        Submit Proposal
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

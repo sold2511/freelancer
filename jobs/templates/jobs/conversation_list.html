@@ -1,0 +1,10 @@
+<h2>Your Conversations</h2>
+<ul>
+    {% for convo in conversations %}
+        <li>
+            <a href="{% url 'chat-detail' convo.pk %}">
+                {{ convo.freelancer if convo.client == request.user else convo.client }} - {{ convo.job.title }}
+            </a>
+        </li>
+    {% endfor %}
+</ul>

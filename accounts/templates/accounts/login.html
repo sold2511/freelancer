@@ -1,0 +1,55 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content%}
+<div
+  class="flex justify-center items-center shadow-2xl shadow-blue-500 bg-blue-200 w-[100%] h-[80vh]"
+>
+  <div class="w-[70vw]">
+    <h2 class="text-4xl text-center font-bold">Login</h2>
+    {% if msg %}
+    <p style="color: green">{{ msg }}</p>
+    {% endif %} {% if errors %}
+    <ul style="color: red">
+      {% for field, error_list in errors.items %}
+      <li>{{ field }}: {{ error_list|join:"" }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div class="w-[70%] mx-auto h-[60%]">
+        <div class="my-4">
+          <label for="email">Email:-</label>
+          <input
+            class="border-b-1 outline-0 my-2 px-8 py-2 w-[100%]"
+            type="email"
+            name="email"
+            placeholder="Email"
+          /><br />
+        </div>
+        <div class="my-4">
+          <label for="password">Password:-</label>
+          <input
+            class="border-b-1 outline-0 my-2 px-8 py-2 w-[100%]"
+            type="password"
+            name="password"
+            placeholder="Password"
+          /><br />
+        </div>
+        <button
+          type="submit"
+          class="bg-blue-400 px-6 py-2 my-1 text-white rounded-full hover:scale-[1.2] hover:bg-blue-800 text-center"
+        >
+          Login
+        </button>
+        <p class="text-gray-600">
+          Don't have a account?
+          <a
+            class="text-blue-400 hover:text-blue-600"
+            href="{% url 'register' %}"
+            >Sign Up</a
+          >
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

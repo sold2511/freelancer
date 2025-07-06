@@ -1,0 +1,21 @@
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %}
+
+<div class="shadow-2xl m-5 shadow-gray-800/50 p-5">
+  <h2 class="text-4xl text-center font-bold">
+    {% if object %}Edit Job{% else %}Post New Job{% endif %}
+  </h2>
+  <div class="p-5">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %} {{ form | crispy }}
+      <button type="submit"
+        class="bg-blue-400 px-6 py-2 my-1 text-white rounded-full hover:scale-[1.2] hover:bg-blue-800 text-center">
+        {% if object %}
+          Update
+        {% else %}
+          Save
+        {% endif %}
+          </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
