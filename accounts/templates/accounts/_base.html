@@ -38,7 +38,7 @@
           class="flex-col items-center flex-grow hidden pb-4 md:pb-0 md:flex md:justify-end md:flex-row lg:pl-2"
         >
           <div class="inline-flex items-center gap-2 list-none lg:ml-auto">
-            {% if request.path != '/register/' and request.path != '/login/' %}
+            {% if request.path != '/register/' and request.path != '/' %}
 
             <a
               class="items-center block px-10 py-2.5 text-base font-medium text-center text-blue-600 transition duration-500 ease-in-out transform border-2 border-white shadow-md rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
@@ -74,5 +74,4 @@
       <div class="container">{% block content %} {% endblock content %}</div>
     </div>
   </body>
-
 </html>

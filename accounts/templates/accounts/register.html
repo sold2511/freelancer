@@ -16,13 +16,7 @@
         <h2 class="text-4xl text-center font-bold">Register</h2>
         {% endif %}
         <form method="post" action=" 
-        {% if form.instance.pk %}
-        
-        {% else %}
-        url 'register'
-        
-        {% endif %}
-             " enctype="multipart/form-data">
+        {% if not form.instance.pk %} {%url 'register'%}{% endif %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="my-4 shadow-xl shadow-gray-200">
                 <label class="text-md" for="username">username</label>

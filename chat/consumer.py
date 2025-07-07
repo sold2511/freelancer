@@ -1,7 +1,8 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 import json
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model 
+
 
 
 
@@ -15,13 +16,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
+        print(f"Connected to room: {self.room_name}")
         self.room_group_name = f'chat_{self.room_name}'
-
         self.user = self.scope["user"]
-        self.conversation = await self.get_conversation(self.room_name)
+        print(">>> WebSocket user:", self.user)
+        if not self.user.is_authenticated:
+            await self.close()
+            return
 
-        if self.user not in [self.conversation.client, self.conversation.freelancer]:
-            await self.close()  # Reject connection
+       
+       
+        self.conversation = await self.get_conversation(self.room_name)
+        client, freelancer = await self.get_participants(self.conversation)
+        print("Client:", client)
+        print("Freelancer:", freelancer)
+        print("Current User:", self.user)
+        print("Client repr:", repr(client))
+        print("Freelancer repr:", repr(freelancer))
+        print("Current User repr:", repr(self.user))
+        if self.user != client and self.user != freelancer:
+            print("User is not a participant in this conversation.")
+            await self.close()
+            return
+        # if self.user not in [client.id, freelancer.id]:
+            
+        #     await self.close()  # Reject connection
         else:
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
             await self.accept()
@@ -53,9 +72,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     @database_sync_to_async
-    def get_conversation(self, pk):
+    def get_conversation(self, room_name):
         from jobs.models import Conversation
-        return Conversation.objects.get(pk=pk)
+        return Conversation.objects.get(id=room_name)
+    
+    @database_sync_to_async
+    def get_participants(self, conversation):
+        return (conversation.client, conversation.freelancer)
+
 
     @database_sync_to_async
     def save_message(self, conversation, sender, content):

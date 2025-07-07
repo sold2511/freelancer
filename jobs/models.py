@@ -67,8 +67,7 @@ class Proposal(models.Model):
     def __str__(self):
         return f'{self.freelancer.username} for {self.job.title}'
 
-    def get_conversation(self):
-        
+    def get_conversation(self):  
         return Conversation.objects.filter(client=self.job.client, freelancer=self.freelancer, job=self.job).first()
 
 

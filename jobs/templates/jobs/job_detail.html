@@ -1,7 +1,7 @@
 {% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %}
 <div class="p-5 relative">
 
-  <div class="bg-blue-400 w-[60vw] text-white p-5 my-5 mx-auto min-h-[70vh] ">
+  <div class="bg-blue-400 w-[60vw] text-white p-5 my-5 mx-auto  ">
     <h2 class="text-4xl  font-bold text-center my-2">{{object.title}}</h2>
     <p class="mt-4 px-8 py-4  text-lg">{{ object.description }}</p>
     <div class="p-5 flex flex-col gap-5">
@@ -32,6 +32,7 @@
           <td class="shadow-lg shadow-gray-200 px-5 py-2">Budget</td>
           <td class="shadow-lg shadow-gray-200 px-5 py-2">Status</td>
           <td class="shadow-lg shadow-gray-200 px-5 py-2">Action</td>
+          <td class="shadow-lg shadow-gray-200 px-5 py-2">Conversation</td>
         </thead>
         <tbody>
           
@@ -56,6 +57,12 @@
                   class="absolute left-0 -bottom-1 h-0.5 w-0 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </a>
             </td>
+            <td class="shadow-lg shadow-gray-200  py-2">
+              {% if proposal.get_conversation %}
+              <a href="{% url 'chat-detail' proposal.get_conversation.pk %}">💬 Start Chat</a>
+              {% else %}
+              <span class="text-gray-400">No Conversation</span>
+              {% endif %}
           </tr>
           {% empty %}
           <tr>

@@ -10,9 +10,17 @@
     class="bg-gray-100 h-[400px] overflow-y-scroll p-4 rounded"
   >
     {% for message in messages %}
-    <p><strong>{{ message.sender.username }}</strong>: {{ message.content }}</p>
+    <div class="mb-2 p-2 rounded bg-gray-200">
+      <p class="text-sm text-gray-600 font-semibold">
+        {{ message.sender.username }}
+        <span class="text-xs text-gray-400"
+          >({{ message.timestamp|date:"H:i d M Y" }})</span
+        >
+      </p>
+      <p>{{ message.content }}</p>
+    </div>
     {% empty %}
-    <p>No messages yet.</p>
+    <p class="text-center text-gray-500">No messages yet.</p>
     {% endfor %}
   </div>
 
@@ -41,7 +49,7 @@
   );
   const conversationId = "{{ conversation.id }}";
   const socket = new WebSocket(
-      `ws://${window.location.host}/ws/chat/${conversationId}/`
+    `ws://${window.location.host}/ws/chat/${conversationId}/`
   );
   chatSocket.onmessage = function (e) {
     const data = JSON.parse(e.data);

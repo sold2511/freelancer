@@ -205,8 +205,8 @@ AUTHENTICATION_BACKENDS = ['accounts.authentication.EmailAuthBackend','django.co
 LOGIN_URL = '/login/'
 
 
-SESSION_COOKIE_AGE = 60*3  # 1 hour
-CSRF_COOKIE_AGE = 60*3
+SESSION_COOKIE_AGE = 60*60  # 1 hour
+CSRF_COOKIE_AGE = 60*60
 # Optional: expire session on browser close
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 ASGI_APPLICATION = 'config.asgi.application'
