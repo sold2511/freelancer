@@ -40,11 +40,40 @@ class UserRegisterSerializers(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user = CustomUser(**validated_data)
         user.set_password(password)
+        user.is_active = False  # Ensure the user is active
         user.save()
         # password = validated_data.pop('password')
         return user
 
-
+class SendEmailVerificationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255)
+    
+    class Meta:
+        model = CustomUser 
+        fields = ['email']
+    
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            user1  = CustomUser.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user1.id))
+            token = PasswordResetTokenGenerator().make_token(user1)
+            link = "http://localhost:8000/api/v1/verify-email/"+uid+'/'+token+'/'
+            
+            data = {
+                'subject':'Verify Your Email',
+                # 'body':link,
+                'body':render_to_string('accounts/verify.html', {
+                'link': link,
+            }),
+                'to_email':user1.email
+            }
+            Util.send_email(data)
+            print(link)
+            return attrs
+        else:
+            raise ValidationError('You are not a Registered user')
+    
 class SendPasswordEmailSerializeres(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255)
     class Meta:
@@ -62,7 +91,7 @@ class SendPasswordEmailSerializeres(serializers.ModelSerializer):
             data = {
                 'subject':'Reset Your Password',
                 # 'body':link,
-                'body':render_to_string('email.html', {
+                'body':render_to_string('accounts/verify.html', {
                 'link': link,
             }),
                 'to_email':user.email

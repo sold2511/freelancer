@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect , HttpResponse
 from rest_framework.response import Response
 from django.contrib.auth import logout
 from rest_framework.views import APIView
@@ -31,12 +31,24 @@ class UserRegisterView(APIView):
         serializer = UserRegisterSerializers(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            if not  user.is_active:
+                serializer1 = SendEmailVerificationSerializer(data={'email': user.email})
+                if serializer1.is_valid(raise_exception=True):
+                    return render(
+                        request,
+                        "accounts/_base.html",  # or a separate error template like "error.html"
+                        {
+                            "success_message": "Email verification link sent successfully. Please check your email."
+                        },
+                        status=status.HTTP_200_OK
+                    )
+                    
             token = get_tokens_for_user(user)
-
+            
             # Optionally login the user
             user.backend = 'django.contrib.auth.backends.ModelBackend'  # or your custom backend
             login(request, user)
-
+            
             # Store in session
             request.session['token'] = token['access']
             request.session['refresh_token'] = token['refresh']
@@ -58,6 +70,16 @@ class UserLoginView(APIView):
         if serializer.is_valid(raise_exception=True):
             email = serializer.validated_data.get('email')
             password = serializer.validated_data.get('password')
+            user = CustomUser.objects.filter(email=email).first()
+            if not user.is_active:
+                return  render(
+            request,
+            "accounts/_base.html",  # or a separate error template like "error.html"
+            {
+                "error_message": "User is not active. Please contact the admin or verify your email."
+            },
+            status=403
+        )   
             print(f"Trying to authenticate {email} with password +{password}+")
             user = authenticate(email=email, password=password)
             print(f"User authenticated: {user}")
@@ -90,15 +112,30 @@ class SendPasswordEmailView(APIView):
         if serializer.is_valid(raise_exception=True):
             return Response({'msg':'Password change link send  Successfully'},status=status.HTTP_200_OK)
         return Response({'Errors':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+    
 
 
+class VerifiedUser(APIView):
+    renderer_classes = [UserRenderer]
+    def get(self,req,uid,token,format=None):
+        try:
+            uid = urlsafe_base64_decode(uid).decode()
+            user = CustomUser.objects.get(id=uid)
+            if PasswordResetTokenGenerator().check_token(user, token):
+                user.is_active = True
+                user.save()
+                return render(req,'accounts/_base.html',{'success_message':'Email verified successfully'},status=status.HTTP_200_OK)
+            else:
+                return render(req,'accounts/_base.html',{'error_message':'Invalid Token'},status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return render(req,'accounts/_base.html',{'error_message':str(e)},status=status.HTTP_400_BAD_REQUEST)
 class UserPasswordResetView(APIView):
     renderer_classes = [UserRenderer]
     def post(self,req,uid,token,format=None):
         serializer= UserPasswordResetSerializers(data=req.data,context={'uid':uid,'token':token})
         if serializer.is_valid(raise_exception=True):
             return Response({'msg':'Password changed Successfully'},status=status.HTTP_200_OK)
-        return Response({'Errors':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error_message':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -71,7 +71,17 @@
           </div>
         </nav>
       </div>
-      <div class="container">{% block content %} {% endblock content %}</div>
+      <div class="container">
+        {% block content %} {% if error_message %}
+        <div class="text-red-500 text-center mt-4">
+          <p>{{ error_message }}</p>
+        </div>
+        {% elif success_message %}
+        <div class="text-green-500 text-center mt-4">
+          <p>{{ success_message }}</p>
+        </div>
+        {% endif %} {% endblock content %}
+      </div>
     </div>
   </body>
 </html>

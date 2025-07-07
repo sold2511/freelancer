@@ -69,7 +69,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [str(BASE_DIR.joinpath('templates'))],
+        'DIRS': [str(BASE_DIR.joinpath('templates')),BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -202,7 +202,7 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = ['accounts.authentication.EmailAuthBackend','django.contrib.auth.backends.ModelBackend']
 
-LOGIN_URL = '/login/'
+LOGIN_URL = '/'
 
 
 SESSION_COOKIE_AGE = 60*60  # 1 hour
