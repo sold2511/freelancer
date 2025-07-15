@@ -1,64 +1,315 @@
-{% extends 'accounts/_base.html' %} {% block content %}
-<div class="p-5 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+{% extends 'accounts/_base.html' %} {% load tailwind_filters %}{% block content %}
+<style></style>
+<div class="p-5 relative max-w-4xl mx-auto bg-white rounded-xl shadow-xl space-y-4">
   <h2 class="text-3xl font-bold text-center">
     💬 Chat Room - {{ conversation.job.title }}
   </h2>
+
+  <div class="{% if user.role == 'client' %}block{% else %}hidden{% endif %}">
+    <form class="" id="sendlink" target="_blank" method="POST" action="{% url 'index' %}">
+      {% csrf_token %}
+      <input type="text"
+        class="shadow shadow-2xl shadow-gray-200 hidden form-control py-2 px-5 outline-none mx-auto w-[100%]"
+        name="room" id="room" aria-describedby="emailHelp" value="{{ conversation.job.client.username }}" />
+
+      <button type="submit"
+        class="absolute right-10 rounded-xl text-white bg-green-500 hover:cursor-pointer top-5 border py-2 px-5">
+        <i class="fa-solid fa-video"></i>
+      </button>
+    </form>
+  </div>
 
   <!-- Chat messages -->
   <div id="chat-box" class="bg-gray-100 h-[400px] overflow-y-scroll p-4 rounded">
     {% for message in messages %}
     <div class="mb-2 p-2 rounded bg-gray-200">
       <p class="text-sm text-gray-600 font-semibold">
-        {{ message.sender.username }}
-        <span class="text-xs text-gray-400">({{ message.timestamp|date:"H:i d M Y" }})</span>
+        {{ message.sender.username }} ({{ message.sender.role }})
+        <span class="text-xs text-gray-400">
+          ({{ message.timestamp|date:"H:i d M Y" }})</span>
       </p>
-      <p>{{ message.content }}</p>
+
+      {% comment %} {% if message.content|slice:":2"=="<a" %} {% endcomment %} {% if message.attachments %} <p>
+        Attachments: {{ message.attachments|safe }}</p>
+        {% else %}
+        <p>{{message.content}}</p>
+        {% endif %}
     </div>
     {% empty %}
     <p class="text-center text-gray-500">No messages yet.</p>
     {% endfor %}
   </div>
+  <form action="" class="relative" id="chat-form" method="post" enctype="multipart/form-data">
+    <div class="flex gap-2 mt-2 items-center">
+      <div id="iconToggleBtn"
+        class="relative border-dashed border rounded-full py-2 px-3 cursor-pointer bg-gray-100 hover:bg-blue-200 transition duration-300">
+        <i id="icon" class="fa-solid fa-plus text-lg transition-transform duration-300"></i>
 
-  <!-- Message form -->
-  <form id="chat-form" class="flex gap-2 mt-2">
-    <input id="message-input" type="text" placeholder="Type your message..."
-      class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" />
-    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all">
-      Send
-    </button>
+        <!-- Dropdown -->
+        <div id="drpmenu"
+          class="absolute p-1 left-[-10px] origin-top bottom-[-110px] transform scale-y-0 transition-transform duration-300 ease-in-out bg-white border rounded shadow-md z-10">
+          <div class="px-5 py-2 mb-2 border w-[170px] bg-green-500 text-white" id="file-upload-btn">
+            <a href="#" class="py-2 px-3">
+              <i class="fa-solid mr-2 fa-link"></i> UPLOAD
+            </a>
+          </div>
+          <div class="px-5 py-2 border w-[170px] bg-green-500 text-white" id="export-chat">
+            <a href="#" class="py-2 px-3">
+              <i class="fa-solid mr-2 fa-download"></i> EXPORT
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-grow">
+        <input id="message-input" type="text" placeholder="Type your message..."
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      </div>
+      <div id="emoji-toggle" class="border-dashed hover:border-solid hover:bg-blue-500 border rounded-xl py-2 px-3">
+        <i class="fa-solid fa-face-smile"></i>
+      </div>
+
+      <input type="file" id="file-input" name="attachments" class="hidden" />
+      <input type="hidden" name="room" value="{{ conversation.id }}" />
+      <div>
+        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all">
+          Send
+        </button>
+      </div>
+
+      <div id="emoji-container" class="absolute bottom-10 border right-10 cursor-move z-50"
+        style="top: 80%; display: none; left: 80%">
+        <emoji-picker></emoji-picker>
+      </div>
+    </div>
   </form>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.min.js"></script>
 <script>
+  document.getElementById("export-chat").addEventListener("click", function () {
+    const chatContent = document.getElementById("chat-box").innerHTML;
+
+    const html = `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Chat Export</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+            }
+            .text-sm { font-size: 0.875rem; }
+            .text-gray-600 { color: #4B5563; }
+            .font-semibold { font-weight: 600; }
+            .text-xs { font-size: 0.75rem; }
+            .text-gray-400 { color: #9CA3AF; }
+            .bg-gray-200 { background-color: #E5E7EB; padding: 10px; margin-bottom: 5px; border-radius: 8px; }
+            a { color: #1D4ED8; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+          </style>
+        </head>
+        <body>
+          <h2 style="text-align:center;">💬 Chat Export</h2>
+          ${chatContent}
+        </body>
+      </html>`;
+
+    const converted = htmlDocx.asBlob(html);
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(converted);
+    link.download = "chat-export.docx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+<script>
+  const iconBtn = document.getElementById("iconToggleBtn");
+  const icon = document.getElementById("icon");
+  const dropdown = document.getElementById("drpmenu");
   const roomName = "{{ conversation.pk }}";
   const username = "{{ user.username }}";
+  const userrole = "{{ user.role }}";
+  var chatBox = document.getElementById("chat-box");
+  const messageElement = document.createElement("div");
+  const timestamp = new Date();
+  const hour = String(timestamp.getHours()).padStart(2, "0");
+  const minute = String(timestamp.getMinutes()).padStart(2, "0");
+  const day = String(timestamp.getDate()).padStart(2, "0");
+  const month = timestamp.toLocaleString("en-US", { month: "short" });
+  const year = timestamp.getFullYear();
+  messageElement.className = "mb-2 p-2 rounded bg-gray-200";
+
+  let isOpen = false;
+
+  document.getElementById("sendlink").onsubmit = function (e) {
+    e.preventDefault();
+    const inputField = document.getElementById("message-input");
+    const message = `<a target='_blank' href='http://localhost:8000/chat/video/{{conversation.job.client.username }}/join/'>Video Call</a>`;
+
+    if (message) {
+      chatSocket.send(
+        JSON.stringify({
+          message: message,
+        })
+      );
+    }
+    setTimeout(() => {
+      e.target.submit(); // or document.getElementById("sendlink").submit();
+    }, 200);
+  };
+
+  iconBtn.addEventListener("click", () => {
+    isOpen = !isOpen;
+
+    // Toggle icon
+    icon.classList.toggle("fa-plus", !isOpen);
+    icon.classList.toggle("fa-x", isOpen);
+
+    // Toggle slide effect
+    dropdown.classList.toggle("scale-y-90", isOpen);
+    dropdown.classList.toggle("scale-y-0", !isOpen);
+  });
+
+  // Optional: close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!iconBtn.contains(e.target)) {
+      isOpen = false;
+      icon.classList.add("fa-plus");
+      icon.classList.remove("fa-x");
+      dropdown.classList.remove("scale-y-90");
+      dropdown.classList.add("scale-y-0");
+    }
+  });
   const chatSocket = new WebSocket(
     "ws://" + window.location.host + "/ws/chat/" + roomName + "/"
   );
   const conversationId = "{{ conversation.id }}";
-  const socket = new WebSocket(
-    `ws://${window.location.host}/ws/chat/${conversationId}/`
-  );
+  // implementation of  emoji picker with drag and drop functionality
+  const container = document.getElementById("emoji-container");
+  const toggleButton = document.getElementById("emoji-toggle");
+  toggleButton.addEventListener("click", (e) => {
+    e.stopPropagation(); // Prevent triggering outer click
+    container.style.display = "block";
+  });
+  let isDragging = false;
+  let offset = { x: 0, y: 0 };
+
+  document.addEventListener("click", (event) => {
+    const isClickInside =
+      container.contains(event.target) || toggleButton.contains(event.target);
+    if (!isClickInside) {
+      container.style.display = "none";
+    }
+  });
+  container.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    offset.x = e.clientX - container.offsetLeft;
+    offset.y = e.clientY - container.offsetTop;
+    container.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    container.style.cursor = "grab";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (isDragging) {
+      container.style.left = e.clientX - offset.x + "px";
+      container.style.top = e.clientY - offset.y + "px";
+    }
+  });
+  const picker = document.querySelector("emoji-picker");
+  const messageInput = document.getElementById("message-input");
+
+  picker.addEventListener("emoji-click", (event) => {
+    const emoji = event.detail.unicode;
+    messageInput.value += emoji;
+    // container.style.display = 'none'; // Hide the picker after selecting an emoji
+  });
+
+  // File upload functionality
+  const fileInput = document.getElementById("file-input");
+  const fileUploadBtn = document.getElementById("file-upload-btn");
+  fileUploadBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // Prevent default link behavior
+    fileInput.click(); // Trigger the file input click
+  });
+  // fileInput.addEventListener("change", (e) => {
+    
+  //   const file = e.target.files[0]; // Access the first file in the FileList
+  //   if (file) {
+  //     console.log("File selected:", file);
+  //     filetag = `<a href="/media/message_attachments/${file.name}" target='_blank'>${file.name}</a>`; // Use console.log for debugging
+  //     console.log("File tag:", filetag);
+  //     chatSocket.send(
+  //       JSON.stringify({
+  //         message: filetag,
+  //       })
+  //     );
+  //   }
+  // });
+  fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const formData = new FormData();
+    formData.append("attachments", file);
+    formData.append("room", conversationId); // conversationId = {{ conversation.id }}
+
+    fetch("/jobs/upload/", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          const filetag = `<a href="${data.file_url}" target='_blank'>${data.file_name}</a>`;
+          chatSocket.send(
+            JSON.stringify({
+              message: filetag,
+            })
+          );
+        } else {
+          alert("File upload failed");
+        }
+      });
+  }
+});
+
+
   chatSocket.onmessage = function (e) {
+    console.log("IM COLLED");
     const data = JSON.parse(e.data);
-    const timestamp = new Date();
-    const hour = String(timestamp.getHours()).padStart(2, "0");
-    const minute = String(timestamp.getMinutes()).padStart(2, "0");
-    const day = String(timestamp.getDate()).padStart(2, "0");
-    const month = timestamp.toLocaleString("en-US", { month: "short" });
-    const year = timestamp.getFullYear();
 
     data.timestamp = `${hour}:${minute} ${day} ${month} ${year}`;
-    const chatBox = document.getElementById("chat-box");
-    const messageElement = document.createElement("div");
+
+    console.log(data.message);
+    // Preserve line breaks\
+    // Ensure long words break
+    let messageContent = "";
+
+    if (data.message.trim().startsWith("<a ")) {
+      messageContent = `Attachments: ${data.message}`;
+    } else {
+      messageContent = data.message;
+    }
+    console.log(messageContent);
+    
+    var messageElement = document.createElement("div");
     messageElement.className = "mb-2 p-2 rounded bg-gray-200";
-    console.log(data);
-    // Preserve line breaks
-    messageElement.style.overflowWrap = "break-word"; // Ensure long words break
-    messageElement.innerHTML = `<p class="text-sm text-gray-600 font-semibold">${data.username} <span class="text-xs text-gray-400">(${data.timestamp})</span></p><p>${data.message}</p>`;
+    messageElement.innerHTML = `<p class="text-sm text-gray-600 font-semibold">${data.username} (${userrole}) <span class="text-xs text-gray-400">(${data.timestamp})</span></p><p>${messageContent}</p>`;
+    console.log(messageElement);
     // Dark
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
+
+    document.getElementById("chat-box").appendChild(messageElement);
+    console.log(chatBox);
+    document.getElementById("chat-box").scrollTop = chatBox.scrollHeight; // auto-scroll
   };
 
   chatSocket.onclose = function (e) {
@@ -74,11 +325,76 @@
       chatSocket.send(
         JSON.stringify({
           message: message,
-
         })
       );
       inputField.value = "";
     }
   };
+
+  document.getElementById("export-chat").addEventListener("click", function () {
+    const chatBox = document.getElementById("chat-box");
+    const clone = chatBox.cloneNode(true);
+
+    // Optional: clean up interactive elements (if any)
+    clone.querySelectorAll("input, button, form").forEach((el) => el.remove());
+
+    const styledHTML = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office'
+            xmlns:w='urn:schemas-microsoft-com:office:word'
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <title>Chat Export</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+          }
+          .message {
+            background-color: #f3f4f6;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+          }
+          .username {
+            font-weight: bold;
+            color: #1f2937;
+          }
+          .role {
+            font-style: italic;
+            color: #2563eb;
+          }
+          .timestamp {
+            font-size: 12px;
+            color: #9ca3af;
+            float: right;
+          }
+          a {
+            color: #1d4ed8;
+            text-decoration: none;
+          }
+          a:hover {
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+      <body>
+        <h2 style="text-align:center;">💬 Chat Export</h2>
+        ${clone.innerHTML}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(["\ufeff", styledHTML], {
+      type: "application/msword",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "chat-export.doc";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
 </script>
 {% endblock %}

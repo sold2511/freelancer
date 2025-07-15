@@ -1,73 +1,44 @@
-from django.shortcuts import render,HttpResponse ,redirect
-
+from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import *
 from django.views.generic import *
-from  rest_framework.views import APIView
-from accounts.renderer import UserRenderer
 from rest_framework_simplejwt.tokens import AccessToken
+
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 # from rest_framework import token
 from rest_framework import status
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.decorators import login_required
+
 from accounts.serializers import *
 from django.urls import reverse_lazy
 from rest_framework.response import Response
 from django.http import HttpResponseForbidden
+from django.core.paginator import Paginator
 from django import forms
+from django.db.models import Prefetch
 
 # Create your views here.
+
+
 def index(request):
     token = request.session.get('token')
     return Response(token)
 
-# class FreelancerListView(LoginRequiredMixin,ListView):
-#     model = FreeLancer
-    
-# class BusinessListView(LoginRequiredMixin,ListView):
-#     model = Business
 
-
-# class FreelancerDetailView(LoginRequiredMixin,DetailView):
-#     model = FreeLancer
-
-class UserProfileView(LoginRequiredMixin,DetailView):
+class UserProfileView(LoginRequiredMixin, DetailView):
     model = CustomUser
     template_name = 'accounts/profile.html'
     context_object_name = 'users'
-    
+
     def get_object(self):
         return self.request.user
-    
 
-# class FreelancerCreateView(LoginRequiredMixin,CreateView):
-#     model =  FreeLancer
-#     fields = ['name','tagline','bio','profile_pic','website']
-#     success_url = reverse_lazy('freelancer-list')
-#     login_url = 'login'
-    
-#     def form_valid(self, form):
-#         if FreeLancer.objects.filter(owner=self.request.user).exists():
-#             form.add_error(None, "You already have a freelancer profile.")
-#             return self.form_invalid(form)
-#         form.instance.owner = self.request.user
-#         return super(FreelancerCreateView,self).form_valid(form)
-    
-# class BusinessCreateView(LoginRequiredMixin,CreateView):
-#     model =  Business
-#     fields = ['name','bio','profile_pic']
-#     success_url = reverse_lazy('business-list')
-    
-#     def form_valid(self, form):
-#         form.instance.owner = self.request.user
-#         return super(BusinessCreateView ,self).form_valid(form)
-    
-    
+
 def check_user_role(request):
     token = request.session.get('token')
     if not token:
-        return Response(request,{'msg':"❌ No token found in session"})
+        return Response(request, {'msg': "❌ No token found in session"})
 
     try:
         access_token = AccessToken(token)
@@ -79,82 +50,97 @@ def check_user_role(request):
         User = get_user_model()
         user = User.objects.get(id=id)
         print(user.role)
-        
-        return HttpResponse(f'role: {user.role} , token : {access_token}')
-    
-    except Exception as e:
-        return Response(request,f"❌ Invalid or expired token: {str(e)}",status=status.HTTP_400_BAD_REQUEST)
 
+        return HttpResponse(f'role: {user.role} , token : {access_token}')
+
+    except Exception as e:
+        return Response(request, f"❌ Invalid or expired token: {str(e)}", status=status.HTTP_400_BAD_REQUEST)
 
 
 def handle_login(req):
     if req.user.get_freelancer() or req.user.get_business():
-        return redirect (reverse_lazy('freelancer-list'))
-    return render(req,'jobs/account_setup.html',{ })
+        return redirect(reverse_lazy('freelancer-list'))
+    return render(req, 'jobs/account_setup.html', {})
 
 
-# class JobsViewSet(viewsets.ModelViewSet):
-#     queryset = Jobs.objects.all()
-#     serializer_class = JobSerializer
-
-
-class JobListView(LoginRequiredMixin,ListView):
+class JobListView(LoginRequiredMixin, ListView):
     model = Jobs
     template_name = 'jobs/job_list.html'
-    context_object_name = 'jobs'
-    
+    context_object_name = 'matching_jobs'
+    paginate_by = 5
+
     def get_queryset(self):
-        user = self.request.user  # this is a User instance
+        user = self.request.user
+        # this is a User instance
+
         if user.role == 'client':
             return Jobs.objects.filter(client_id=user.id)
         else:
-            return Jobs.objects.all() 
-        
+            user_proposals = Proposal.objects.filter(freelancer=user)
+            return Jobs.objects.filter(id__in=user_proposals.values_list('job_id', flat=True)).prefetch_related(Prefetch('proposal_set', queryset=user_proposals, to_attr='user_proposals'))
 
-class JobCreateView(LoginRequiredMixin,CreateView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        if user.role != 'client':
+            proposal_ids = user.proposal_set.values_list('job_id', flat=True)
+            unmatched_jobs = Jobs.objects.exclude(id__in=proposal_ids)
+
+            # Apply pagination manually for unmatched_jobs
+            page = self.request.GET.get('unmatched_page')
+            paginator = Paginator(unmatched_jobs, 5)  # 5 per page
+            context['unmatching_jobs'] = paginator.get_page(page)
+
+        return context
+
+
+class JobCreateView(LoginRequiredMixin, CreateView):
     model = Jobs
-    fields = ['title', 'description', 'budget', 'deadline', 'category', 'attachments', 'skills']
+    fields = ['title', 'description', 'budget',
+              'deadline', 'category', 'attachments', 'skills']
     template_name = 'jobs/job_form.html'
     success_url = reverse_lazy('job-list')
     widgets = {
-            'deadline': forms.DateInput(attrs={'type': 'date'}),
-        }
+        'deadline': forms.DateInput(attrs={'type': 'date'}),
+    }
 
     def form_valid(self, form):
         form.instance.client = self.request.user
         return super().form_valid(form)
 
-class JobUpdateView(LoginRequiredMixin,UpdateView):
+
+class JobUpdateView(LoginRequiredMixin, UpdateView):
     model = Jobs
-    fields = ['title', 'description', 'budget', 'deadline', 'category', 'attachments', 'skills']
+    fields = ['title', 'description', 'budget',
+              'deadline', 'category', 'attachments', 'skills']
     template_name = 'jobs/job_form.html'
     success_url = reverse_lazy('job-list')
-    
+
     def get_queryset(self):
         # Only allow the owner to update
         return Jobs.objects.filter(client_id=self.request.user)
-    
-class UserProfileUpdateView(LoginRequiredMixin,UpdateView):
+
+
+class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = CustomUser
-    fields = ['username','first_name','email','last_name','phone','tagline','role','bio','profile_pic','website']  # Only status is editable
+    fields = ['username', 'first_name', 'email', 'last_name', 'phone', 'tagline',
+              'role', 'bio', 'profile_pic', 'website']  # Only status is editable
     template_name = 'accounts/register.html'
     success_url = reverse_lazy('profile')
-    
+
     def get_queryset(self):
         """Allow only the owner to update their profile."""
         print(self.request.user)
         return CustomUser.objects.filter(username=self.request.user)
 
-class JobDeleteView(LoginRequiredMixin,DeleteView):
+
+class JobDeleteView(LoginRequiredMixin, DeleteView):
     model = Jobs
     template_name = 'jobs/job_confirm_delete.html'
     success_url = reverse_lazy('job-list')
 
-# class JobDetailView(LoginRequiredMixin,DetailView):
-#     model = Jobs
-#     template_name = 'jobs/job_detail.html'
-    
-   
+
 class JobDetailView(LoginRequiredMixin, DetailView):
     model = Jobs
     template_name = 'jobs/job_detail.html'
@@ -170,16 +156,18 @@ class JobDetailView(LoginRequiredMixin, DetailView):
             context['proposals'] = job.proposal_set.all()
         elif user.role == 'freelancer':
             # Check if this freelancer already submitted a proposal for this job
-            context['my_proposal'] = job.proposal_set.filter(freelancer=user).first()
+            context['my_proposal'] = job.proposal_set.filter(
+                freelancer=user).first()
 
         return context
+
 
 class ProposalCreateView(LoginRequiredMixin, CreateView):
     model = Proposal
     fields = ['message', 'estimated_budget', 'timeline']
     template_name = 'jobs/proposal_form.html'
     success_url = reverse_lazy('job-list')  # or back to detail page
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         job_id = self.kwargs['pk']
@@ -196,8 +184,8 @@ class ProposalCreateView(LoginRequiredMixin, CreateView):
         if Proposal.objects.filter(job_id=kwargs['pk'], freelancer=request.user).exists():
             return HttpResponseForbidden("You have already submitted a proposal for this job.")
         return super().dispatch(request, *args, **kwargs)
-    
-    
+
+
 class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
     model = Proposal
     fields = ['status']  # Only status is editable
@@ -209,9 +197,9 @@ class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('job-detail', kwargs={'pk': self.object.job.pk})
-    
+
     def form_valid(self, form):
-        #you can add logic to notify the freelancer about the status change
+        # you can add logic to notify the freelancer about the status change
         respomse = super().form_valid(form)
         if form.cleaned_data['status'] == 'accepted':
             conversation, _ = Conversation.objects.get_or_create(
@@ -220,12 +208,11 @@ class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
                 freelancer=form.instance.freelancer,
                 job=form.instance.job
             )
-    
+
     # Always link the proposal, even if it already existed
             conversation.proposal = form.instance
             conversation.save()
         return respomse
-
 
 
 class ConversationListView(LoginRequiredMixin, ListView):
@@ -235,6 +222,7 @@ class ConversationListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Conversation.objects.filter(models.Q(client=self.request.user) | models.Q(freelancer=self.request.user))
+
 
 class ChatDetailView(LoginRequiredMixin, DetailView):
     model = Conversation
@@ -251,6 +239,24 @@ class ChatDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['messages'] = self.object.messages.order_by('timestamp')
         return context
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        conversation = self.object
+
+        message_text = request.POST.get('message', '').strip()
+        attachment = request.FILES.get('attachments')
+
+        if message_text or attachment:
+            Message.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                content=message_text,
+                attachments=attachment
+            )
+
+        return redirect(request.path)
+
 
 class SendMessageView(LoginRequiredMixin, CreateView):
     model = Message
@@ -267,3 +273,20 @@ class SendMessageView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('chat-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+def upload_attachment(request):
+    from django.core.files.storage import default_storage
+    from django.core.files.base import ContentFile
+    if request.method == 'POST':
+        uploaded_file = request.FILES.get('attachments')
+        if uploaded_file:
+            # Save file manually to media/ directory
+            path = default_storage.save('message_attachments/' + uploaded_file.name, ContentFile(uploaded_file.read()))
+            file_url = default_storage.url(path)
+            return JsonResponse({
+                'status': 'success',
+                'file_name': uploaded_file.name,
+                'file_url': file_url
+            })
+    return JsonResponse({'status': 'error'}, status=400)

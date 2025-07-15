@@ -39,16 +39,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'accounts',
     'jobs',
     'crispy_forms',
     "crispy_tailwind",
     'rest_framework',
-    "corsheaders", 
+    "corsheaders",
     "rest_framework_simplejwt",
     'channels',
     'chat',
+    'notification',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +70,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [str(BASE_DIR.joinpath('templates')),BASE_DIR / "templates"],
+        'DIRS': [str(BASE_DIR.joinpath('templates')), BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,7 +91,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME':'freelancer',
+        'NAME': 'freelancer',
         "HOST": "localhost",
         "USER": "postgres",
         "PASSWORD": "2511",
@@ -134,7 +135,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -144,7 +147,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # custom settings
 AUTH_USER_MODEL = 'accounts.CustomUser'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = str(BASE_DIR.joinpath('media'))
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
@@ -172,9 +175,9 @@ SIMPLE_JWT = {
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
 }
 
-PASSWORD_RESET_TIMEOUT=900  #15min
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST="smtp.gmail.com"
+PASSWORD_RESET_TIMEOUT = 900  # 15min
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
@@ -186,6 +189,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:9000",
     "http://localhost:5173",
+    "http://192.168.0.42:8000",
+    "http://192.168.0.172:8000",
+    "http://192.168.0.101:8000",
+    "http://192.168.0.177:8000",
+
 ]
 
 REST_FRAMEWORK = {
@@ -194,13 +202,14 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    'SEARCH_PARAM' : "q", 
+    'SEARCH_PARAM': "q",
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
 
-AUTHENTICATION_BACKENDS = ['accounts.authentication.EmailAuthBackend','django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = [
+    'accounts.authentication.EmailAuthBackend', 'django.contrib.auth.backends.ModelBackend']
 
 LOGIN_URL = '/'
 

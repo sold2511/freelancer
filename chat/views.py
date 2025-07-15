@@ -1,8 +1,11 @@
-# from django.shortcuts import render
-# from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+
+from django.contrib.auth.decorators import login_required
 # from django.views.generic import ListView, DetailView
 # from django.http import HttpResponseForbidden
-# from .models import Conversation, Message
+from .models import *
+from jobs.models import Conversation,Message
 # from django.db import models
 # from django.http import HttpResponse
 # from django.views.generic.edit import CreateView
@@ -48,3 +51,44 @@
 
 #     def get_success_url(self):
 #         return reverse_lazy('chat-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+
+
+
+def index(request):
+    if request.method == 'POST':
+        room = request.POST['room']
+        role = request.session.get('role')
+        get_room = Chat.objects.filter(room_name=room)
+        if get_room:
+            c = get_room[0]
+            number = c.allowed_users
+            if int(number) < 2:
+                number = 2
+                if role=='client':
+                    return redirect(f'/chat/video/{room}/created/')
+                else:
+                    return redirect(f'/chat/video/{room}/join/')
+        else:
+            create = Chat.objects.create(room_name=room, allowed_users=1)
+            if create:
+                return redirect(f'/chat/video/{room}/created/')
+    
+
+
+def video(request, room, created):
+    return render(request, 'video.html', {'created': created, 'room': room})
+
+@login_required
+def upload_attachment(request):
+    if request.method == 'POST':
+        conversation_id = request.POST.get("room")
+        file = request.FILES.get("attachments")
+        if conversation_id and file:
+            conv = Conversation.objects.get(id=conversation_id)
+           
+    return redirect("chat-detail", pk=conversation_id)
+
+
+

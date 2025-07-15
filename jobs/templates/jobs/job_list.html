@@ -2,38 +2,186 @@
 
 <div class="p-5 relative">
   <h2 class="text-4xl font-bold text-center my-4">All Jobs</h2>
-  <div class="bg-blue-400 w-[60vw]  mx-auto min-h-[70vh]">
-
-
+  <div class="bg-blue-400 w-[60vw] mx-auto min-h-[70vh]">
     {% if user.role == 'client' %}
     <a class="py-2 px-5 bg-blue-500 absolute right-50 text-white rounded-lg hover:bg-blue-800 hover:scale-[1.2] top-10"
       href="{% url 'job-create' %}">Post New Job</a>
     {% endif %}
 
     <ul class="p-5">
-      {% for job in object_list %}
-      <li class="my-8 px-8 py-4 w-[60%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg  ">
-        <div class="flex w-[100%] jusfify-between">
-
-          <div class=" w-[70%] " for="title"><a href="{% url 'job-detail' job.pk %}" name="title">{{ job.title }}</a>
-          </div>        
-
-
-
-
-
-          {% if user.role == 'client' %}
-          <div class="flex gap-5  jusfify-end ">
-            <div><a class="py-2 px-5 bg-blue-500  right-32 text-white rounded-lg hover:bg-blue-800 hover:scale-[1.2]"
-                href="{% url 'job-update' job.pk %}">Edit</a></div>
-            <div><a class="py-2 px-5 bg-blue-500  right-32 text-white rounded-lg hover:bg-blue-800 hover:scale-[1.2]"
-                href="{% url 'job-delete' job.pk %}">Delete</a></div>
-          </div>
+      {% if user.role == 'freelancer' %}
+      <div class="flex items-center justify-between px-4">
+        <div class="text-2xl font-bold text-center my-4">Proposal Submited Jobs</div>
+        <div class="mt-4">
+          {% if is_paginated %}
+          {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}"
+            class="px-2 py-1 rounded-2xl hover:text-white duration-700 transition ease-in hover:border"><i
+              class="fa-solid fa-angle-left"></i></a>
           {% endif %}
+          Page
+          {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}"
+            class="px-2 py-1 rounded-2xl hover:text-white duration-700 transition ease-in hover:border"><i
+              class="fa-solid fa-angle-right"></i></a>
+          {% endif %}
+          {% endif %}
+        </div>
 
+      </div>
+
+
+     
+        <div class="flex w-[100%] jusfify-between">
+          <div class="w-[100%]">
+            <li class="my-8 px-8 py-4 w-[100%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
+            <table class="border-separate border-spacing-5   text-center w-[100%]">
+              <thead>
+                <td>S.No.</td>
+                <td>Title</td>
+                <td>Proposed Budget</td>
+                <td>Expected Budget</td>
+                <td>Status</td>
+                <td>Chat</td>
+              </thead>
+              <tbody>
+
+                {% for job in matching_jobs %}
+                <tr class="text-gray-200/90 shadow-lg shadow-gray-200/60 p-5 ">
+                  <td>{{forloop.counter}}</td>
+                  <td><a href="{% url 'job-detail' job.pk %}" name="title">{{ job.title }}</a></td>
+                  <td>
+                    {% for proposal in job.user_proposals %}
+                    ₹{{ proposal.estimated_budget }}
+                    {% empty %}
+                    ₹0
+                    {% endfor %}
+                  </td>
+                  <td>₹{{ job.budget }}</td>
+                  <td>
+                    {% for proposal in job.user_proposals %}
+                    {{ proposal.status }}
+                    {% empty %}
+                    Pending
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {% for proposal in job.user_proposals %}
+                    {% with convo=proposal.get_conversation %}
+                    {% if convo %}
+                    <a href="{% url 'chat-detail' convo.pk %}">💬 Start Chat</a>
+                    {% else %}
+                    <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
+                    {% endif %}
+                    {% endwith %}
+                    {% empty %}
+                    <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
+                    {% endfor %}
+                  </td>
+
+                  {% empty %}
+                  <td>No matching jobs found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </li>
+
+          </div>
+        </div>
+      
+
+
+
+      <div class="flex items-center justify-between px-4">
+        <div class="text-2xl font-bold text-center my-4">Remaining Jobs</div>
+        <div class="">
+          {% if unmatching_jobs.has_other_pages %}
+
+          {% if unmatching_jobs.has_previous %}
+
+          <a href="?unmatched_page={{ unmatching_jobs.previous_page_number }}"
+            class="px-2 py-1 rounded-2xl hover:text-white duration-700 transition ease-in hover:border"><i
+              class="fa-solid fa-angle-left"> </i></a>
+
+          {% endif %}
+          Page
+          {% if unmatching_jobs.has_next %}
+
+          <a href="?unmatched_page={{ unmatching_jobs.next_page_number }}"
+            class="px-2 py-1 rounded-2xl hover:text-white duration-700 transition ease-in hover:border"><i
+              class="fa-solid fa-angle-right"></i></a>
+          {% endif %} {% endif %}
+        </div>
+      </div>
+      <li class="mt-4 px-8 pt-4 w-[100%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
+
+      <table class="border-separate border-spacing-5   text-center w-[100%]">
+        <thead>
+          <td>S.No.</td>
+          <td>Title</td>
+          <td>Proposed Budget</td>
+          <td>Expected Budget</td>
+          <td>Status</td>
+          <td>Chat</td>
+        </thead>
+        <tbody>
+          {% for job in unmatching_jobs %}
+          <tr class="text-gray-200/90 shadow-lg shadow-gray-200/60 p-5 ">
+            <td>{{forloop.counter}}</td>
+            <td><a href="{% url 'job-detail' job.pk %}" name="title">{{ job.title }}</a></td>
+            <td>
+              {% for proposal in job.user_proposals %}
+              ₹{{ proposal.estimated_budget }}
+              {% empty %}
+              ₹0
+              {% endfor %}
+            </td>
+            <td>₹{{ job.budget }}</td>
+            <td>
+              {% for proposal in job.user_proposals %}
+              {{ proposal.status }}
+              {% empty %}
+              Pending
+              {% endfor %}
+            </td>
+            <td>
+              {% for proposal in job.user_proposals %}
+              {% with convo=proposal.get_conversation %}
+              {% if convo %}
+              <a href="{% url 'chat-detail' convo.pk %}">💬 Start Chat</a>
+              {% else %}
+              <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
+              {% endif %}
+              {% endwith %}
+              {% empty %}
+              <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
+              {% endfor %}
+            </td>
+
+            {% empty %}
+            <td>No matching jobs found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </li>
+      {% else %} 
+      {% for job in object_list %}
+      <li class="my-8 px-8 py-4 w-[65%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
+        <div class="flex w-[100%] jusfify-betwee items-center gap-5">
+          <div class="w-[100%]" for="title">
+            <a href="{% url 'job-detail' job.pk %}" name="title">{{ job.title }}</a>
+          </div>
+            <a class="bg-white px-6 py-2 my-1 text-black rounded-full hover:scale-[1.2] hover:bg-gray-400 text-center"
+            href="{% url 'job-update' job.pk %}">Edit</a>
+            <a class="bg-white px-6 py-2 my-1 text-black rounded-full hover:scale-[1.2] hover:bg-gray-400 text-center"
+            href="{% url 'job-delete' job.pk %}">Delete</a>
         </div>
       </li>
-      {% endfor %}
+      {%empty%}
+      <li class="text-center text-gray-500">No jobs Submited.</li>
+      {% endfor %} {% endif %}
     </ul>
   </div>
 </div>

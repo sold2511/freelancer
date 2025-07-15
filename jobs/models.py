@@ -86,6 +86,7 @@ class Conversation(models.Model):
 
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
+    attachments = models.FileField(upload_to='message_attachments/', null=True, blank=True , max_length=300)
     sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)

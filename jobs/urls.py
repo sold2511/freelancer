@@ -4,7 +4,7 @@ urlpatterns = [
     path('profile/',UserProfileView.as_view(),name="profile"),
     path('profile/update/<int:pk>',UserProfileUpdateView.as_view(),name="profile-update"),
     path('account-setup/',handle_login,name="account-setup"),
-    path('index/',check_user_role,name="index"),
+    # path('index/', check_user_role, name='index'),
     path('', JobListView.as_view(), name='job-list'),
     path('create/', JobCreateView.as_view(), name='job-create'),
     path('<int:pk>/update/', JobUpdateView.as_view(), name='job-update'),
@@ -15,5 +15,6 @@ urlpatterns = [
     path('chat', ConversationListView.as_view(), name='chat-list'),
     path('chat/<int:pk>/', ChatDetailView.as_view(), name='chat-detail'),
     path('chat/<int:pk>/send/', SendMessageView.as_view(), name='send-message'),
+    path('upload/', upload_attachment, name='upload_attachment'),
     
 ]
