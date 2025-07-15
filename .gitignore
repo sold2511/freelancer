@@ -1,20 +1,36 @@
+# Environment variables
 .env
 
-# Ignore entire folder
-media/
+# Python Bytecode
+*.py[cod]
 __pycache__/
+
+# Media and file uploads
+media/
+
+# Node dependencies
 node_modules/
+
+# Python virtual environments
 env/
 myenv/
+venv/
 
-# Ignore specific files
+# Log files
 *.log
-*.pyc
+
+# SQLite DB and secrets
 db.sqlite3
 secret.txt
+secrets/
 
-# Ignore everything in a folder except one file
+# Ignore everything in logs except keep.log
 logs/*
 !logs/keep.log
 
-secrets/
+# Mac system files
+.DS_Store
+
+# VSCode or PyCharm files (optional)
+.vscode/
+.idea/
