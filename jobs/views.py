@@ -216,21 +216,52 @@ class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
     # Always link the proposal, even if it already existed
             conversation.proposal = proposal
             conversation.save()
-        send_mail(
-            subject="🎉 Your Proposal Has Been Accepted!",
-            message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been accepted by the client.\nYou can now start a conversation or wait for further instructions.",
-            from_email="dipanshusolanki131@gmail.com",
-            recipient_list=[freelancer.email],
-            fail_silently=False,
-        )
-        # ✅ Optional: Create In-App Notification
-        Notification.objects.create(
+            send_mail(
+                subject="🎉 Your Proposal Has Been Accepted!",
+                message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been accepted by the client.\nYou can now start a conversation or wait for further instructions.",
+                from_email="dipanshusolanki131@gmail.com",
+                recipient_list=[freelancer.email],
+                fail_silently=False,
+            )
+            Notification.objects.create(
             user=freelancer,
             message=f"Your proposal for '{proposal.job.title}' was accepted!",
-            type='proposal',
-            related_object=proposal,
+            )
+        if form.cleaned_data['status'] =='rejected':
+            send_mail(
+                subject="Your Proposal Has Been Rejected!",
+                message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been rejected by the client.",
+                from_email="dipanshusolanki131@gmail.com",
+                recipient_list=[freelancer.email],
+                fail_silently=False,
+            )
+            Notification.objects.create(
+            user=freelancer,
+            message=f"Your proposal for '{proposal.job.title}' was rejected!",
+            
+            )
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        
+        # WebSocket group name format (can be anything, but must match frontend join)
+        latest_notification = Notification.objects.filter(user=freelancer).latest('created')
+        group_name = f"user_{freelancer.id}"
+        
+        channel_layer = get_channel_layer()
+        
+        # Send notification to WebSocket group
+        print(f"📤 group_send() to group user_{freelancer.id} → {latest_notification.message}")
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                "type": "notification_message",  # this will map to `notification_message()` method in consumer
+                "message": latest_notification.message,
+            }
         )
-        return respomse
+   
+        # ✅ Optional: Create In-App Notification
+        
+        return  respomse
 
 
 class ConversationListView(LoginRequiredMixin, ListView):

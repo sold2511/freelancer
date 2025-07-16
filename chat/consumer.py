@@ -156,3 +156,31 @@ class VideoChat(AsyncJsonWebsocketConsumer):
             'candidate': event['candidate'],
             'isCreated': event['isCreated']
         })
+
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        print(f"✅ Channel added: {self.channel_name}")
+        print('hello im in connect')
+        self.user = self.scope["user"]
+        if self.user.is_authenticated:
+            self.group_name = f"user_{self.user.id}"
+            print(f"🔌 CONNECT: WebSocket connection attempt from {self.scope['user']}")
+            print(f"🟢 WebSocket joined group: {self.group_name}")
+            await self.channel_layer.group_add(self.group_name, self.channel_name)
+            await self.accept()
+        else:
+            await self.close()
+
+    async def disconnect(self, close_code):
+        print(f"❌ Channel removed: {self.channel_name}")
+        if hasattr(self, 'group_name'):
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def notification_message(self, event):
+        message = event['message']
+        print(f"📢 Sending notification to user: {self.user.id} → {message}")
+        
+        await self.send(text_data=json.dumps({
+            'message': message
+        }))

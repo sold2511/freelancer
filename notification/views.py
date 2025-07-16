@@ -15,7 +15,7 @@ from .models import DeviceToken
 @login
 @csrf_exempt
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'notification/index.html')
 
 
 @login
