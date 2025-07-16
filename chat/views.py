@@ -80,15 +80,15 @@ def index(request):
 def video(request, room, created):
     return render(request, 'video.html', {'created': created, 'room': room})
 
-@login_required
-def upload_attachment(request):
-    if request.method == 'POST':
-        conversation_id = request.POST.get("room")
-        file = request.FILES.get("attachments")
-        if conversation_id and file:
-            conv = Conversation.objects.get(id=conversation_id)
+# @login_required
+# def upload_attachment(request):
+#     if request.method == 'POST':
+#         conversation_id = request.POST.get("room")
+#         file = request.FILES.get("attachments")
+#         if conversation_id and file:
+#             conv = Conversation.objects.get(id=conversation_id)
            
-    return redirect("chat-detail", pk=conversation_id)
+#     return redirect("chat-detail", pk=conversation_id)
 
 
 

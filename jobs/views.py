@@ -1,4 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
+from django.core.mail import send_mail
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import *
 from django.views.generic import *
@@ -17,6 +18,7 @@ from django.http import HttpResponseForbidden
 from django.core.paginator import Paginator
 from django import forms
 from django.db.models import Prefetch
+from notification.models import Notification
 
 # Create your views here.
 
@@ -201,17 +203,33 @@ class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         # you can add logic to notify the freelancer about the status change
         respomse = super().form_valid(form)
+        proposal = form.instance
+        freelancer = proposal.freelancer
         if form.cleaned_data['status'] == 'accepted':
             conversation, _ = Conversation.objects.get_or_create(
-                proposal=form.instance,
+                proposal=proposal,
                 client=form.instance.job.client,
-                freelancer=form.instance.freelancer,
+                freelancer=freelancer,
                 job=form.instance.job
             )
 
     # Always link the proposal, even if it already existed
-            conversation.proposal = form.instance
+            conversation.proposal = proposal
             conversation.save()
+        send_mail(
+            subject="🎉 Your Proposal Has Been Accepted!",
+            message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been accepted by the client.\nYou can now start a conversation or wait for further instructions.",
+            from_email="dipanshusolanki131@gmail.com",
+            recipient_list=[freelancer.email],
+            fail_silently=False,
+        )
+        # ✅ Optional: Create In-App Notification
+        Notification.objects.create(
+            user=freelancer,
+            message=f"Your proposal for '{proposal.job.title}' was accepted!",
+            type='proposal',
+            related_object=proposal,
+        )
         return respomse
 
 

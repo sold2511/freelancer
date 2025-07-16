@@ -1,13 +1,17 @@
 from django.db import models
 from accounts.models import CustomUser
+from jobs.models import Proposal
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 # Create your models here.
 class Notification(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    notificaiton = models.TextField(max_length=100)
-    is_seen = models.BooleanField(default=False) 
+    message = models.TextField(max_length=100)
+    type = models.CharField(max_length=50)
+    is_read = models.BooleanField(default=False)
+    related_object = models.ForeignKey(Proposal, on_delete=models.CASCADE, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
         channel_layer = get_channel_layer()
@@ -16,7 +20,7 @@ class Notification(models.Model):
             'type': 'notification',
             'message': {
                 'user_id': self.user.id,
-                'notification': self.notificaiton,
+                'notification': self.message,
                 'is_seen': self.is_seen,
                 'count': notification_objs
             }
