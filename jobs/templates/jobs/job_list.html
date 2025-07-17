@@ -2,13 +2,13 @@
 
 <div class="p-5 relative">
   <h2 class="text-4xl font-bold text-center my-4">All Jobs</h2>
-  <div class="bg-blue-400 w-[60vw] mx-auto min-h-[70vh]">
+  <div class="bg-blue-400 w-[100%] mx-auto min-h-[70vh]">
     {% if user.role == 'client' %}
-    <a class="py-2 px-5 bg-blue-500 absolute right-50 text-white rounded-lg hover:bg-blue-800 hover:scale-[1.2] top-10"
+    <a class="py-2 px-5 bg-blue-500 absolute right-10 text-white rounded-lg hover:bg-blue-800 hover:scale-[1.2] top-10"
       href="{% url 'job-create' %}">Post New Job</a>
     {% endif %}
 
-    <ul class="p-5">
+    <ul class="p-5 w-[100%]">
       {% if user.role == 'freelancer' %}
       <div class="flex items-center justify-between px-4">
         <div class="text-2xl font-bold text-center my-4">Proposal Submited Jobs</div>
@@ -114,7 +114,7 @@
           {% endif %} {% endif %}
         </div>
       </div>
-      <li class="mt-4 px-8 pt-4 w-[100%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
+      <li class="mt-4 px-8 py-4 w-[100%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
 
       <table class="border-separate border-spacing-5   text-center w-[100%]">
         <thead>
@@ -168,7 +168,7 @@
       </li>
       {% else %} 
       {% for job in object_list %}
-      <li class="my-8 px-8 py-4 w-[65%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
+      <li class="my-8 px-8 py-4 w-[90%] shadow-lg shadow-gray-200/60 mx-auto text-white rounded-lg">
         <div class="flex w-[100%] jusfify-betwee items-center gap-5">
           <div class="w-[100%]" for="title">
             <a href="{% url 'job-detail' job.pk %}" name="title">{{ job.title }}</a>

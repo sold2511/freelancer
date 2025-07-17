@@ -258,9 +258,24 @@ class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
                 "message": latest_notification.message,
             }
         )
-   
-        # ✅ Optional: Create In-App Notification
         
+        # ✅ Optional: Create In-App Notification
+#         from notification.views import send_notification_fcm_v1
+#         from notification.models import DeviceToken
+#         # Import at the top
+
+# # Inside form_valid()
+#         import requests
+
+#         requests.post("http://127.0.0.1:8000/notification/", data={"user_id": freelancer.id})
+#         tokens = DeviceToken.objects.filter(user=freelancer).values_list('token', flat=True)
+#         if tokens:
+#             send_notification_fcm_v1(
+#                 tokens,
+#                 "Proposal Status Updated",
+#                 latest_notification.message
+#             )
+
         return  respomse
 
 

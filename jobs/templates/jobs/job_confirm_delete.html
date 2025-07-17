@@ -1,9 +1,9 @@
 
 {% extends 'accounts/_base.html' %} {% load tailwind_filters %} {% block content %}
-<h2>Are you sure you want to delete "{{ object }}"?</h2>
-<form method="post">
+<h2 class="text-center text-2xl my-5" >Are you sure you want to delete "{{ object }}"?</h2>
+<form method="post" class="flex gap-10 justify-center">
   {% csrf_token %}
-  <button type="submit">Yes, Delete</button>
-  <a href="{% url 'job-list' %}">Cancel</a>
+  <div class="border rounded-xl py-2 px-5 bg-gray-400 text-white"><button type="submit">Confirm</button></div>
+  <div class="border rounded-xl py-2 px-5 bg-gray-400 text-white"><a href="{% url 'job-list' %}">Cancel</a></div>
 </form>
 {% endblock %}
