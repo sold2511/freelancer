@@ -68,15 +68,20 @@
                   <td>
                     {% for proposal in job.user_proposals %}
                     {% with convo=proposal.get_conversation %}
-                    {% if convo %}
-                    <a href="{% url 'chat-detail' convo.pk %}">💬 Start Chat</a>
-                    {% else %}
-                    <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
-                    {% endif %}
+                        {% if convo %}
+                            {% if proposal.status == "accepted" %}
+                                <a href="{% url 'chat-detail' convo.pk %}">💬 Start Chat</a>
+                            {% else %}
+                                <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
+                            {% endif %}
+                        {% else %}
+                            <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
+                        {% endif %}
                     {% endwith %}
-                    {% empty %}
+                {% empty %}
                     <a class="hover:cursor-not-allowed text-gray-300">💬 Start Chat</a>
-                    {% endfor %}
+                {% endfor %}
+                
                   </td>
 
                   {% empty %}

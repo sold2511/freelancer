@@ -57,7 +57,7 @@
       cameraicon.classList.add('fa-video')
     }
   };
-  let websocketurl = "ws://127.0.0.1:8000/ws/";
+  let websocketurl = "ws://localhost:8000/ws/";
   console.log(websocketurl);
   const ws = new WebSocket(websocketurl);
   ws.onopen = () => {

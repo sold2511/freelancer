@@ -92,12 +92,18 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
+        # 'ENGINE': 'django.db.backends.postgresql',
+        # 'NAME': 'freelancer',
+        # "HOST": "localhost",
+        # "USER": "postgres",
+        # "PASSWORD": "2511",
+        # "PORT": "5432",
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'freelancer',
-        "HOST": "localhost",
-        "USER": "postgres",
-        "PASSWORD": "2511",
-        "PORT": "5432",
+        'NAME': os.getenv('DB_NAME', 'freelancer'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', '2511'),
+        'HOST': os.getenv('DB_HOST', 'db'),   # <- MUST be 'db'
+        'PORT': os.getenv('DB_PORT', '5432'), 
     }
 }
 
@@ -225,6 +231,12 @@ ASGI_APPLICATION = 'config.asgi.application'
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+        "CONFIG": {"hosts": [("redis", 6379)]},
     },
 }
+
+
+CELERY_TIMEZONE = "Asia/Kolkata"
+CELERY_BROKER_URL='redis://redis:6379/0'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60

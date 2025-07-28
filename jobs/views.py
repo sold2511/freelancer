@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from django.core.mail import send_mail
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import *
 from django.views.generic import *
@@ -19,6 +19,7 @@ from django.core.paginator import Paginator
 from django import forms
 from django.db.models import Prefetch
 from notification.models import Notification
+from config.celery import sendmail
 
 # Create your views here.
 
@@ -216,25 +217,29 @@ class ProposalStatusUpdateView(LoginRequiredMixin, UpdateView):
     # Always link the proposal, even if it already existed
             conversation.proposal = proposal
             conversation.save()
-            send_mail(
-                subject="🎉 Your Proposal Has Been Accepted!",
-                message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been accepted by the client.\nYou can now start a conversation or wait for further instructions.",
-                from_email="dipanshusolanki131@gmail.com",
-                recipient_list=[freelancer.email],
-                fail_silently=False,
-            )
+            result=sendmail.apply_async(kwargs={'username':freelancer.username,'title':proposal.job.title,'status':'accepted','recipient':freelancer.email})
+            print(result)
+            # send_mail(
+            #     subject="🎉 Your Proposal Has Been Accepted!",
+            #     message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been accepted by the client.\nYou can now start a conversation or wait for further instructions.",
+            #     from_email="dipanshusolanki131@gmail.com",
+            #     recipient_list=[freelancer.email],
+            #     fail_silently=False,
+            # )
             Notification.objects.create(
             user=freelancer,
             message=f"Your proposal for '{proposal.job.title}' was accepted!",
             )
         if form.cleaned_data['status'] =='rejected':
-            send_mail(
-                subject="Your Proposal Has Been Rejected!",
-                message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been rejected by the client.",
-                from_email="dipanshusolanki131@gmail.com",
-                recipient_list=[freelancer.email],
-                fail_silently=False,
-            )
+            result=sendmail.apply_async(kwargs={'username':freelancer.username,'title':proposal.job.title,'status':'rejected','recipient':freelancer.email})
+            print(result)
+            # send_mail(
+            #     subject="Your Proposal Has Been Rejected!",
+            #     message=f"Hello {freelancer.username},\n\nYour proposal for the job '{proposal.job.title}' has been rejected by the client.",
+            #     from_email="dipanshusolanki131@gmail.com",
+            #     recipient_list=[freelancer.email],
+            #     fail_silently=False,
+            # )
             Notification.objects.create(
             user=freelancer,
             message=f"Your proposal for '{proposal.job.title}' was rejected!",
